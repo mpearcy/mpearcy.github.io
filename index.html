@@ -1,0 +1,289 @@
+<html>
+<body>
+<input type="button" name="toggle grid" value="toggle grid" onclick='toggleGrid()'>
+<input type="button" name="clear life" value="clear life" onclick='clearLife()'>
+<input type="button" name="random life" value="random life" onclick='randomLife()'>
+<input type="button" name="create glider" value="create glider" onclick='createGlider()'>
+<input type="button" name="create glider" value="create glider gun" onclick='createGliderGun()'>
+<script type="text/javascript">
+var gridSize = 80;
+var frontBuffer = new Array(gridSize);
+var backBuffer = new Array(gridSize);
+var grid = true;
+
+window.onload = function() 
+{
+	for (var i = 0; i < gridSize; i++){
+	   frontBuffer[i] = new Array(gridSize);
+	   backBuffer[i] = new Array(gridSize);
+	}
+
+	clearArray(frontBuffer);
+	clearArray(backBuffer);
+
+	randomPopulateArray(frontBuffer);
+
+	setInterval(draw, 100);//30 fps
+	setInterval(iterate, 100);
+}
+
+function iterate()
+{
+	iterateFrontToBack(frontBuffer, backBuffer);
+	copyArray(frontBuffer, backBuffer);
+	clearArray(backBuffer);
+}
+
+function toggleGrid()
+{
+	if(grid == true)
+		grid = false;
+	else
+		grid = true;
+}
+
+function clearLife()
+{
+	clearArray(frontBuffer);
+	clearArray(backBuffer);
+}
+
+function randomLife()
+{
+	randomPopulateArray(frontBuffer);
+}
+
+function createGlider()
+{
+	setupGlider(frontBuffer);
+}
+
+function createGliderGun()
+{
+	setupGliderGun(frontBuffer);
+}
+
+function draw()
+{
+
+	clearCanvas();
+	drawArray(frontBuffer);
+	if(grid == true)
+		drawGrid(gridSize);
+}
+
+function clearCanvas() 
+{
+  var canvas = document.getElementById('myDrawing');
+  canvas.width = canvas.width;
+}
+
+function drawSquareAt(x,y)
+{
+var drawingCanvas = document.getElementById('myDrawing');
+	// Check the element is in the DOM and the browser supports canvas
+	if(drawingCanvas.getContext){
+		// Initaliase a 2-dimensional drawing context
+		var context = drawingCanvas.getContext('2d');
+
+		context.fillStyle = "#00DD00";
+		context.beginPath();
+		context.moveTo(0+(x*10),0+(y*10));
+		context.lineTo(10+(x*10),0+(y*10));
+		context.lineTo(10+(x*10),10+(y*10));
+		context.lineTo(0+(x*10),10+(y*10));
+		context.closePath();
+		context.fill();
+	}
+}
+
+function drawGrid(size)
+{
+	var drawingCanvas = document.getElementById('myDrawing');
+	// Check the element is in the DOM and the browser supports canvas
+	if(drawingCanvas.getContext){
+		// Initaliase a 2-dimensional drawing context
+		var context = drawingCanvas.getContext('2d');
+
+		context.lineWidth = 1;
+		context.strokeStyle = '#999999';
+
+		for(var i = 0; i < size+1; i++){		
+
+			context.beginPath();
+			context.moveTo((i*10)+0.5, 0+0.5);
+			context.lineTo((i*10)+0.5, (size*10)+0.5);
+			context.stroke();
+			
+			context.beginPath();
+			context.moveTo(0+0.5, (i*10)+0.5);
+			context.lineTo((size*10)+0.5, (i*10)+0.5);
+			context.stroke();
+
+		}
+	}
+}
+
+function copyArray(frontArray, backArray)
+{
+	for (var i = 0; i < gridSize; i++){
+		for (var j = 0; j < gridSize; j++){
+				frontArray[i][j]=backArray[i][j];
+		}
+	}
+}
+
+function iterateFrontToBack(frontArray, backArray)
+{
+
+	for (var i = 0; i < gridSize; i++){
+		for (var j = 0; j < gridSize; j++){
+			var totalSurroundCount = 0;
+			//find total number of live squares surrounding
+		
+			for(var x=i-1; x < i+2; x++){
+				for(var y=j-1; y < j+2; y++){
+					var localx = x;
+					var localy = y;					
+					if(x < 0){
+						x=gridSize-1;
+					}
+					if(y < 0){
+						y=gridSize-1;
+					}
+					if(x >= gridSize){
+						x=0;
+					}
+					if(y >= gridSize){
+						y=0;
+					}
+					if(frontArray[x][y] == 1){
+						if(!(x == i && j == y)){
+							totalSurroundCount++;
+						}
+					}
+					
+					x = localx;
+					y = localy;		
+				}
+			}	
+			
+			
+			//rules of the game
+			if(frontArray[i][j] == 1){
+				if(totalSurroundCount < 2){
+					backArray[i][j] = 0;
+				}
+				if(totalSurroundCount >= 2 && totalSurroundCount <= 3){
+					backArray[i][j] = 1;
+					
+				}
+				if(totalSurroundCount > 3 ){
+					backArray[i][j] = 0;
+				}
+			}
+			else
+			{
+				if(totalSurroundCount == 3){
+					backArray[i][j] = 1;
+				}
+				else{
+					backArray[i][j] = 0;
+				}
+			}
+		}
+	}
+}
+
+function randomPopulateArray(frontArray)
+{
+	for (var i = 0; i < gridSize; i++){
+		for (var j = 0; j < gridSize; j++){
+			var what = Math.floor(Math.random()*2);
+			if(what != 0){
+				frontArray[i][j]=1;
+			}
+		}
+	}
+}
+
+function clearArray(array)
+{
+	for (var i = 0; i < gridSize; i++){
+		for (var j = 0; j < gridSize; j++){
+			array[i][j]=0;
+		}
+	}
+}
+
+function setupGlider(array)
+{
+	array[10][10]=1;
+	array[10][11]=1;
+	array[10][12]=1;
+	array[9][12]=1;
+	array[8][11]=1;
+}
+
+function setupGliderGun(array)
+{
+	array[1][5]=1;
+	array[1][6]=1;
+	array[2][5]=1;
+	array[2][6]=1;
+	
+	array[11][5]=1;
+	array[11][6]=1;
+	array[11][7]=1;
+	array[12][4]=1;
+	array[12][8]=1;
+	array[13][3]=1;
+	array[13][9]=1;
+	array[14][3]=1;
+	array[14][9]=1;
+	array[15][6]=1;
+	array[16][4]=1;
+	array[16][8]=1;
+	array[17][7]=1;
+	array[17][6]=1;
+	array[17][5]=1;
+	array[18][6]=1;
+	
+	array[21][3]=1;
+	array[21][4]=1;
+	array[21][5]=1;
+	array[22][3]=1;
+	array[22][4]=1;
+	array[22][5]=1;
+	array[23][2]=1;
+	array[23][6]=1;
+	array[25][1]=1;
+	array[25][2]=1;
+	array[25][6]=1;
+	array[25][7]=1;
+	
+	array[35][3]=1;
+	array[35][4]=1;
+	array[36][3]=1;
+	array[36][4]=1;
+}
+
+function drawArray(anArray)
+{
+	for (var i = 0; i < gridSize; i++){
+		for (var j = 0; j < gridSize; j++){
+			if(anArray[i][j]==1){
+				drawSquareAt(i,j);
+			}
+		}
+	}
+}
+
+</script>
+<br/>
+<canvas id="myDrawing" width="801" height="801">
+<p>Your browser doesn't support canvas.</p>
+</canvas>
+
+</body>
+</html>
